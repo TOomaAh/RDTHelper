@@ -1,13 +1,14 @@
 let abord = false;
 
 function debridLink(link){
+    let token = localStorage.getItem('token');
     let settings = {
         "url": "/api/v1/torrents/debrid",
         "method": "POST",
         "timeout": 0,
         "headers": {
             "Content-Type": "application/json",
-            "Authorization": "Bearer " +  Cookies.get('Authorization')
+            "Authorization": "Bearer " +  token
         },
         "data": JSON.stringify({
             "link": link

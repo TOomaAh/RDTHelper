@@ -1,6 +1,33 @@
 <html>
 <head>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script>
+        function performLogin() {
+            var username = $("#username").val();
+            var password = $("#password").val();
+            $.ajax({
+                url: "/api/v1/login",
+                type: "POST",
+                // set inside body of request
+                data: JSON.stringify({
+                    username: username,
+                    password: password
+                }),
+                success: function (data) {
+                    // receive "{ "token": "..." }"
+                    var token = data.token;
+                    // store token in local storage
+                    localStorage.setItem("token", token);
+                    // redirect to home page
+                    window.location.href = "/web/home";
+                },
+                error: function (data) {
+                    // show error message
+                    alert("Invalid username and password.");
+                },
+            });
+        }
+    </script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-F3w7mX95PdgyTmZZMECAngseQB83DfGTowi0iMjiWaeVhAn4FJkqJByhZMI3AhiU" crossorigin="anonymous">
     <style>
         body {
@@ -86,7 +113,7 @@
         <div class="login-form">
             <h1 style="color: white;">RDT Helper</h1>
             <h3 style="color: white;">Login</h3>
-            <form class="bg-dark" action="/perform_login" method="POST">
+            <div class="bg-dark" action="#">
                 {{ if .logout }}
                 <div>
                     <p style="color: white">You have been logged out.</p>
@@ -105,8 +132,8 @@
                     <p style="color: white">Invalid username and password.</p>
                 </div>
                 {{ end }}
-                <button type="submit" class="btn btn-primary">Submit</button>
-            </form>
+                <button onclick="performLogin()" type="submit" class="btn btn-primary">Submit</button>
+            </div>
 
         </div>
     </div>

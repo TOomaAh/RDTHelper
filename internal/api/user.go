@@ -3,23 +3,27 @@ package api
 import (
 	"fmt"
 
+	"github.com/TOomaAh/RDTHelper/internal/database"
 	"github.com/TOomaAh/RDTHelper/model"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
-func RegisterUser(group *gin.RouterGroup) {
-	user := group.Group("/user")
-	{
-		user.GET("/users", listUsers)
-		user.POST("/users", createUser)
-		user.POST("/signup", signup)
-		user.POST("/login", login)
-	}
+type UserWebGroup struct {
+	db *database.Database
 }
 
-func listUsers(c *gin.Context) {
+func RegisterUser(group *gin.RouterGroup, db *database.Database) *UserWebGroup {
+	u := UserWebGroup{db}
+	group.GET("/users", u.listUsers)
+	group.POST("/users", u.createUser)
+	group.POST("/signup", u.signup)
+	group.POST("/login", u.login)
+	return &u
+}
+
+func (u *UserWebGroup) listUsers(c *gin.Context) {
 	db := c.MustGet("db").(*gorm.DB)
 	users := model.FindAllUsers(db)
 	c.JSON(200, gin.H{
@@ -27,8 +31,8 @@ func listUsers(c *gin.Context) {
 	})
 }
 
-func PerformSignup(c *gin.Context) {
-	db := c.MustGet("db").(*gorm.DB)
+func (u *UserWebGroup) PerformSignup(c *gin.Context) {
+	db := c.MustGet("db").(*database.Database)
 	var user model.User
 	user.Username = c.PostForm("username")
 	//encrypt password
@@ -38,20 +42,24 @@ func PerformSignup(c *gin.Context) {
 	}
 	user.Password = string(hashedPassword)
 	user.RdtToken = c.PostForm("rdt_token")
-	user.Create(db)
+	if db.CreateUser(&user) != nil {
+		c.JSON(400, gin.H{"error": "Error while creating user"})
+		return
+
+	}
 	c.Redirect(302, "/web/home")
 }
 
-func PerformLogin(username string, password string, db *gorm.DB) (string, error) {
-	var user model.User
-	user.Username = username
+func (u *UserWebGroup) PerformLogin(username string, password string) (string, error) {
 
-	user = *user.FindOneByLogin(db)
-	if user.ID == 0 {
+	user, err := u.db.FindUserByUsername(username)
+
+	if err != nil {
 		fmt.Println("user not found")
 		return "", fmt.Errorf("user not found")
 	}
-	err := VerifyPassword(password, user.Password)
+
+	err = u.verifyPassword(password, user.Password)
 
 	if err != nil {
 		return "", err
@@ -65,7 +73,7 @@ func PerformLogin(username string, password string, db *gorm.DB) (string, error)
 	return token, nil
 }
 
-func createUser(c *gin.Context) {
+func (u *UserWebGroup) createUser(c *gin.Context) {
 	db := c.MustGet("db").(*gorm.DB)
 	var user model.User
 	if err := c.ShouldBindJSON(&user); err != nil {
@@ -78,7 +86,7 @@ func createUser(c *gin.Context) {
 	})
 }
 
-func signup(c *gin.Context) {
+func (u *UserWebGroup) signup(c *gin.Context) {
 	db := c.MustGet("db").(*gorm.DB)
 	var user model.User
 	if err := c.ShouldBindJSON(&user); err != nil {
@@ -91,34 +99,40 @@ func signup(c *gin.Context) {
 	})
 }
 
-func VerifyPassword(password, hashedPassword string) error {
+func (u *UserWebGroup) verifyPassword(password, hashedPassword string) error {
 	return bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
 }
 
-func login(c *gin.Context) {
+func (u *UserWebGroup) login(c *gin.Context) {
 	var input Authentication
-	db := c.MustGet("db").(*gorm.DB)
+
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
 
-	u := model.User{}
+	fmt.Printf("input: %v\n", input)
 
-	u.Username = input.Username
-	u.Password = input.Password
+	username := input.Username
 
-	user := u.FindOneByLogin(db)
-
-	if user.ID == 0 {
-		c.JSON(400, gin.H{"error": "Invalid username or password"})
+	if username == "" {
+		c.JSON(400, gin.H{"error": "Username is required"})
 		return
 	}
 
-	err := VerifyPassword(user.Password, u.Password)
+	password := input.Password
+
+	user, err := u.db.FindUserByUsername(username)
 
 	if err != nil {
-		c.JSON(400, gin.H{"error": "Invalid username or password"})
+		c.JSON(400, gin.H{"error": "Username incorrect"})
+		return
+	}
+
+	err = u.verifyPassword(password, user.Password)
+
+	if err != nil {
+		c.JSON(400, gin.H{"error": "Password incorrect"})
 		return
 	}
 

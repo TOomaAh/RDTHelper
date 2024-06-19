@@ -1,36 +1,20 @@
-package realdebrid
+package realdebridold
 
-import (
-	"encoding/json"
-	"fmt"
-	"io/ioutil"
-	"log"
-	"net/http"
-	"strings"
-
-	"github.com/TOomaAh/RDTHelper/model"
-	"github.com/gin-gonic/gin"
-	fast "github.com/myussufz/fasthttp-api"
-
-	"gorm.io/gorm"
-)
-
-type AuthHeader struct {
-	Authorization string `header:"Authorization"`
+/*
+type RealDebridAPI struct {
+	db     *gorm.DB
+	client *RealDebridClient
 }
 
-const (
-	// APIURL is the base URL for the API
-	APIURL = "https://api.real-debrid.com/rest/1.0"
-)
+func NewRealDebridAPI(db *gorm.DB, client *RealDebridClient) *RealDebridAPI {
+	return &RealDebridAPI{db, client}
+}
 
 func initHeader(c *gin.Context) map[string]string {
 	db := c.MustGet("db").(*gorm.DB)
 
 	var user model.User
 	id, err := model.ExtractTokenID(c)
-
-	fmt.Println(err)
 
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
@@ -42,6 +26,8 @@ func initHeader(c *gin.Context) map[string]string {
 
 	rdtToken := user.RdtToken
 
+	fmt.Println(rdtToken)
+
 	//create header
 
 	header := map[string]string{
@@ -50,35 +36,15 @@ func initHeader(c *gin.Context) map[string]string {
 	return header
 }
 
-//return JSON response from API
-func GetAll(c *gin.Context) (*[]model.Torrent, error) {
-	var torrents *[]model.Torrent
-	header := initHeader(c)
-
-	if header == nil {
-		return nil, fmt.Errorf("cannot parse header")
-	}
-
-	options := fast.Option{
-		Method:      http.MethodGet,
-		ContentType: fast.ContentTypeJSON,
-		Headers:     header,
-	}
-
-	if err := fast.Fetch(APIURL+"/torrents", options).ToJSON(&torrents); err != nil {
-		return nil, err
-	}
-
-	return torrents, nil
-}
-
 func GetOne(c *gin.Context) *model.Torrent {
 	return GetOneWithID(c, c.Param("id"))
 }
 
+var APIURL = "https://api.real-debrid.com/rest/1.0"
+
 func GetOneWithID(c *gin.Context, id string) *model.Torrent {
 	//Get One torrent from real debrid
-	var torrent model.Torrent
+	var torrent *model.Torrent
 
 	header := initHeader(c)
 
@@ -92,12 +58,12 @@ func GetOneWithID(c *gin.Context, id string) *model.Torrent {
 		Headers:     header,
 	}
 
-	if err := fast.Fetch(APIURL+"/torrents/info/"+id, options).ToJSON(&torrent); err != nil {
+	if err := fast.Fetch(APIURL+"/torrents/info/"+id, options).ToJSON(torrent); err != nil {
 		log.Println(err)
 		return nil
 	}
 
-	return &torrent
+	return torrent
 }
 
 func DeleteOne(c *gin.Context) {
@@ -217,7 +183,7 @@ func Upload(c *gin.Context) *[]model.RdtUpload {
 	return &rdtUpload
 }
 
-func Debrid(c *gin.Context) *model.Link {
+func Debrid(c *gin.Context) *real {
 	//Debrid torrent from real debrid
 
 	header := initHeader(c)
@@ -250,3 +216,4 @@ func Debrid(c *gin.Context) *model.Link {
 	}
 	return &link
 }
+*/

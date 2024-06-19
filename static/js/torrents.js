@@ -49,6 +49,18 @@ let toastTrigger = document.getElementById('liveToastBtn')
 
 function makeRequest(settings, callback){
 
+    // get token from local storage
+    let token = localStorage.getItem('token');
+    if (token){
+        settings.headers = {
+            Authorization: 'Bearer ' + token
+        }
+    } else {
+        // redirect to login page
+        console.log("redirecting to login page")
+        document.location.href = "/web/login";
+    }
+
     $.ajax(settings).done(callback).fail((jqXHR, textStatus, errorThrown) => {
 
     console.log(jqXHR)
@@ -83,12 +95,13 @@ function deleteTorrents(){
 }
 
 function updateInterface(){
+    let token = localStorage.getItem('token');
     var settings = {
         url: "/api/v1/torrents",
         method: "GET",
         timeout: 3000,
         headers: {
-            Authorization: 'Bearer ' + Cookies.get('Authorization')
+            Authorization: 'Bearer ' + token
         }
     };
     makeRequest(settings, (response, status, jqXHR) => {

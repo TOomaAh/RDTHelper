@@ -1,6 +1,6 @@
-package model
+package realdebrid
 
-type RdtFile struct {
+type File struct {
 	ID       int64  `json:"id"`
 	Path     string `json:"path"`
 	Bytes    int64  `json:"bytes"`

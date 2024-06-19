@@ -4,16 +4,30 @@ import (
 	"log"
 	"strings"
 
-	"github.com/TOomaAh/RDTHelper/model"
-	"github.com/TOomaAh/RDTHelper/realdebrid"
+	"github.com/TOomaAh/RDTHelper/internal/database"
+	"github.com/TOomaAh/RDTHelper/pkg/realdebrid"
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 )
 
-func RegisterWeb(group *gin.RouterGroup) {
+type WebGroup struct {
+	client *realdebrid.RealDebridClient
+}
+
+func NewWebGroup(group *gin.RouterGroup) {
+	w := &WebGroup{}
+
+	group.Use(func(c *gin.Context) {
+		// get rdtClient and catch error
+		client, exist := c.Get("rd")
+		if !exist {
+			return
+		}
+		w.client = client.(*realdebrid.RealDebridClient)
+	})
+
 	group.GET("/settings", func(ctx *gin.Context) {
-		db := ctx.MustGet("db").(*gorm.DB)
-		user := model.FindAllUsers(db)[0]
+		db := ctx.MustGet("db").(*database.Database)
+		user, _ := db.FindUserByUsername("Thomas")
 
 		ctx.HTML(200, "settings.html", gin.H{
 			"username": user.Username,
@@ -32,7 +46,7 @@ func RegisterWeb(group *gin.RouterGroup) {
 		ids := c.PostFormArray("id")
 		log.Println(ids)
 		for _, id := range ids {
-			torrent := realdebrid.GetOneWithID(c, id)
+			torrent := w.client.GetTorrentInfo(id)
 			links = append(links, torrent.Links[0])
 		}
 
