@@ -14,3 +14,7 @@ type Link struct {
 
 	Streamable int `json:"streamable"`
 }
+
+type LinkRequest struct {
+	Link string `json:"link"`
+}

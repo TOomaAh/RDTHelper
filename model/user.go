@@ -5,10 +5,26 @@ import "gorm.io/gorm"
 type User struct {
 	gorm.Model
 	ID       int64
-	Username string
+	Username string `gorm:"unique"`
 	Password string
 	ShowAll  bool
 	RdtToken string
+}
+
+type UserDTO struct {
+	ID       int64  `json:"id"`
+	Username string `json:"username"`
+	ShowAll  bool   `json:"show_all"`
+	RDTToken string `json:"rdt_token"`
+}
+
+func (u *User) ToDTO() *UserDTO {
+	return &UserDTO{
+		ID:       u.ID,
+		Username: u.Username,
+		ShowAll:  u.ShowAll,
+		RDTToken: u.RdtToken,
+	}
 }
 
 func New(username string, password string, showAll bool, rdtToken string) *User {
@@ -22,8 +38,8 @@ func New(username string, password string, showAll bool, rdtToken string) *User 
 
 func GetToken(db *gorm.DB) string {
 	user := &User{}
-	db.First(user)
-	if user != nil {
+	err := db.First(user).Error
+	if err != nil {
 		return user.RdtToken
 	}
 	return ""
@@ -49,6 +65,7 @@ func (u *User) Update(db *gorm.DB) *User {
 	if db.Error != nil {
 		return nil
 	}
+
 	return u
 }
 
