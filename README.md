@@ -1,3 +1,5 @@
+![logo without text](https://github.com/user-attachments/assets/ae43d019-96a4-44df-8cd3-48f64c6d7780)
+
 # RDTHelper
 
 RDTHelper is an improved real-debrid interface. This tool will allow you to upload several '.torrent' in one go. It will also allow you to debride multiple torrents at once.
