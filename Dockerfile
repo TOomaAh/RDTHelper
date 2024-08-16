@@ -23,6 +23,8 @@ WORKDIR /app
 COPY --from=builder /app/main .
 COPY --from=builder /app/public ./public
 
+ENV GIN_MODE=release
+
 EXPOSE 8080
 
 CMD ["./main"]
