@@ -88,4 +88,4 @@ jobs:
       - name: Inspect image
         if: github.event_name != 'pull_request'
         run: |
-          docker buildx imagetools inspect bagul/rdthelper:${{ env.BRANCH }}
+          docker buildx imagetools inspect bagul/rdthelper:${{ steps.meta.outputs.version }}
